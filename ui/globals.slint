@@ -1,0 +1,33 @@
+export global Theme {
+    in-out property <int> theme-idx: 0;
+    in-out property <brush> long-break: #af486d;
+    in-out property <brush> short-break: #c3cffb;
+    in-out property <brush> focus-round: #eebc7f;
+    // in-out property <brush> break-round: #a6dc98;
+    in-out property <brush> background: #0c0912;
+    in-out property <brush> background-light: #343132;
+    in-out property <brush> background-lightest: #837c7e;
+    in-out property <brush> foreground: #dfdfd7;
+    in-out property <brush> foreground-darker: #bec0c0 ;
+    in-out property <brush> foreground-darkest: #adadae;
+    in-out property <brush> accent: #7147f0;
+    in-out property <brush> nav: #1d2545;
+    in-out property <brush> text-clr-primary: #b4a3f8;
+    in-out property <brush> text-clr-secondary: #cbc5db;
+    in-out property <length> letter-spacing: 3px;
+}
+
+export struct JsonTheme {
+    name: string,
+    long-round: brush,
+    short-round: brush,
+    focus-round: brush,
+    background: brush,
+    background-light: brush,
+    background-lightest: brush,
+    foreground: brush,
+    foreground-darker: brush,
+    foreground-darkest: brush,
+    accent: brush,
+    letter-spacing: length
+}

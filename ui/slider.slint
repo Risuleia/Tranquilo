@@ -1,0 +1,127 @@
+export component Slider {
+    in-out property <int> value: 1;
+    
+    in property <int> minimum: 1;
+    in property <int> maximum: 100;
+    in property <int> step: 1;
+    in-out property <color> color: red;
+    in property <color> slider-color: red;
+    in property <color> placeholder-color: black;
+    in property <color> fill-color: red;
+    in property <color> bob-hover-color: red;
+    in property <bool> vertical: false;
+
+    callback value-changed(int);
+
+    min-width: 16px;
+    min-height: slider-bob.height;
+    padding: 10px;
+    horizontal-stretch: vertical ? 0 : 1;
+    vertical-stretch: vertical ? 1 : 0;
+
+    placeholder-track := Rectangle {
+        y: (parent.height - self.height) / 2;
+        border-radius: 2px;
+        background: parent.placeholder-color;
+        animate background {
+            duration: 150ms;
+        }
+    }
+    fill-track := Rectangle {
+        border-radius: 2px;
+        background: parent.color;
+        animate background {
+            duration: 150ms;
+        }
+    }
+    slider-bob := Rectangle {
+        width: 18px;
+        height: 18px;
+        border-radius: self.width / 2;
+        border-color: #fff.transparentize(0.5);
+        border-width: 2px;
+        background: slider-touch.has-hover ? parent.bob-hover-color : parent.color;
+        animate background {
+            duration: 150ms;
+        }
+    }
+
+    slider-touch := TouchArea {
+        width: parent.width;
+        height: parent.height;
+
+        property <int> pressed-value;
+        property <int> minimum: parent.minimum;
+        property <int> maximum: parent.maximum;
+        property <int> step: parent.step;
+
+        pointer-event(e) => {
+            if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                root.value = self.pressed-value
+            }
+        }
+        moved => {
+            if (self.pressed && self.enabled) {
+                if (root.vertical) {
+                    root.value = max(slider-touch.minimum, min(
+                        slider-touch.maximum,
+                        self.pressed-value - (slider-touch.mouse-y - slider-touch.pressed-y) * (self.maximum - self.minimum) / (root.height - slider-bob.height)
+                    ))
+                } else {
+                    root.value = max(slider-touch.minimum, min(
+                        slider-touch.maximum,
+                        self.pressed-value + (slider-touch.mouse-x - slider-touch.pressed-x) * (self.maximum - self.minimum) / (root.width - slider-bob.width)
+                    ));
+                }
+                root.value-changed(root.value);
+            }
+        }
+    }
+
+    focus-scope := FocusScope {
+        x: 0;
+        width: 0;
+
+        key-pressed(e) => {
+            if (self.enabled && e.text == Key.RightArrow) {
+                root.value = Math.min(root.value + slider-touch.step, slider-touch.maximum);
+                root.value-changed(root.value);
+                accept
+            } else if (self.enabled && e.text == Key.LeftArrow) {
+                root.value = Math.max(root.value - slider-touch.step, slider-touch.minimum);
+                root.value-changed(root.value);
+                accept
+            } else {
+                reject
+            }
+        }
+    }
+
+    states [
+        verticle when root.vertical : {
+            placeholder-track.width: 5px;
+            placeholder-track.height: self.height;
+
+            fill-track.x: placeholder-track.x;
+            fill-track.y: self.height - fill-track.height;
+            fill-track.height: self.height * ((self.value - (self.minimum / 2)) / self.maximum);
+            fill-track.width: placeholder-track.width;
+
+            slider-bob.x: (self.width - slider-bob.width) / 2;
+            slider-bob.y: (self.height - slider-bob.height) - ((self.height - slider-bob.height) * (self.value - slider-touch.minimum) / (slider-touch.maximum - slider-touch.minimum));
+        }
+
+        horizontal when !root.vertical : {
+            placeholder-track.width: self.width;
+            placeholder-track.height: 5px;
+
+            fill-track.x: 0;
+            fill-track.y: (self.height - fill-track.height) / 2;
+            fill-track.height: placeholder-track.height;
+            fill-track.width: self.width * ((self.value - (self.minimum / 2)) / self.maximum);
+
+            slider-bob.x: (self.width - slider-bob.width) * (self.value - slider-touch.minimum) / (slider-touch.maximum - slider-touch.minimum);
+            slider-bob.y: (self.height - slider-bob.height) / 2;
+        }
+    ]
+}

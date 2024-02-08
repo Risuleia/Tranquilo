@@ -1,0 +1,187 @@
+import { GridBox } from "std-widgets.slint";
+import { Theme } from "globals.slint";
+import { Main } from "main.slint";
+import { Stats } from "stats.slint";
+import { Settings } from "settings.slint";
+
+component NavBtn inherits Rectangle {
+    in-out property <bool> active;
+    in property <image> icon;
+    callback activate;
+
+    Rectangle {
+        padding: 0px;
+        width: 40px;
+        height: 40px;
+        border-radius: 100px;
+
+        icon := Image {
+            y: parent.height / 2 - self.height / 2;
+            source: root.icon;
+            image-fit: contain;
+            width: 60%;
+            height: 60%;
+            colorize: Theme.background-lightest.brighter(10.5);
+            animate colorize, width, height, y {
+                duration: 250ms;
+            }
+        }
+    }
+
+    bbi-ta := TouchArea {
+        clicked => { root.activate() }
+    }
+
+    states [
+        hvr-act when bbi-ta.has-hover && root.active: {
+            icon.colorize: #fff;
+            icon.y: -14px;
+            icon.width: 70%;
+            icon.height: 70%;
+        }
+        hvr-act when bbi-ta.has-hover && !root.active: {
+            icon.colorize: Theme.accent.brighter(0.65);
+        }
+        hvr-act when !bbi-ta.has-hover && root.active: {
+            icon.colorize: #fff;
+            icon.y: -14px;
+            icon.width: 70%;
+            icon.height: 70%;
+        }
+        hvr-act when !bbi-ta.has-hover && !root.active: {
+            icon.colorize: Theme.background-lightest.brighter(0.5);
+        }
+    ]
+}
+
+component Nav inherits Rectangle {
+    width: 100%;
+    height: 40px;
+
+    in-out property <int> active-page: 1;
+    
+    Rectangle {
+        width: 80%;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        border-radius: 15px;
+        background: Theme.nav;
+
+        for page-icon[index] in [
+            @image-url("../assets/icons/settings.svg"),
+            @image-url("../assets/icons/clock.svg"),
+            @image-url("../assets/icons/stats.svg"),
+        ] : NavBtn {
+            y: 0px;
+            x: self.width * index;
+            height: 40px;
+            width: parent.width / 3;
+            active: root.active-page == index;
+            icon: page-icon;
+    
+            activate => {
+                root.active-page = index
+            }
+        }
+
+        Rectangle {
+            x: self.width * active-page;
+            y: -20px;
+            z: -1;
+            width: parent.width / 3;
+
+            Rectangle {
+                x: 0;
+                y: 21px;
+                width: 15px;
+                height: 15px;
+                background: Theme.nav;
+                border-radius: 50px;
+                drop-shadow-color: Theme.background;
+                drop-shadow-offset-x: 8px;
+                drop-shadow-offset-y: -6px;
+            }
+            Rectangle {
+                x: parent.width - 15px;
+                y: 21px;
+                width: 15px;
+                height: 15px;
+                background: Theme.nav;
+                border-radius: 50px;
+                drop-shadow-color: Theme.background;
+                drop-shadow-offset-x: -8px;
+                drop-shadow-offset-y: -6px;
+            }
+            Rectangle {
+                width: 68px;
+                height: 68px;
+                border-radius: 10000px;
+                background: Theme.accent;
+                border-color: Theme.background;
+                border-width: 8px;
+            }
+
+            animate x {
+                delay: 225ms;
+                duration: 450ms;
+                easing: ease-in-out;
+            }
+        }
+    }
+}
+
+export component TabContainer inherits VerticalLayout {
+    padding-bottom: 2rem;
+
+    Rectangle {
+        main := Main {
+            animate opacity, x {
+                duration: 350ms;
+                easing: ease-in-out;
+            }
+            visible: self.opacity > 0;
+        }
+        stats := Stats {
+            animate opacity, x {
+                duration: 350ms;
+                easing: ease-in-out;
+            }
+            visible: self.opacity > 0;
+        }
+        settings := Settings {
+            animate opacity, x {
+                duration: 350ms;
+                easing: ease-in-out;
+            }
+            visible: self.opacity > 0;
+        }
+    }
+
+    states [
+        tab0 when nav.active-page == 0: {
+            main.opacity: 0;
+            settings.opacity: 100%;
+            stats.opacity: 0;
+        }
+        tab1 when nav.active-page == 1: {
+            main.opacity: 100%;
+            settings.opacity: 0;
+            stats.opacity: 0;
+        }
+        tab2 when nav.active-page == 2: {
+            main.opacity: 0;
+            settings.opacity: 0;
+            stats.opacity: 100%;
+        }
+    ]
+
+    Rectangle {
+        height: nav.height + 35px;
+        padding-top: 5rem;
+        background: Theme.background;
+
+        nav := Nav {
+            y: parent.height - self.height;
+        }
+    }
+}

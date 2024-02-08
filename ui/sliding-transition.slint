@@ -1,0 +1,36 @@
+import { Theme } from "globals.slint";
+import { TabContainer } from "tabs.slint";
+
+export component SlidingTransition {
+    in-out property <bool> expanded;
+    out property <length> continuation-x;
+
+    animate continuation-x {
+        duration: 300ms;
+        easing: ease-in-out;
+    }
+
+    states [
+        vis when root.expanded: {
+            continuation-x: 0;
+        }
+        not-vis when !root.expanded: {
+            continuation-x: self.width * -1;
+        }
+    ]
+
+    horizontal-stretch: 0;
+
+    Rectangle {
+        y: 0;
+        x: root.continuation-x;
+        height: 100%;
+        width: 100%;
+
+        content := Rectangle {
+            clip: true;
+
+            tab-container := TabContainer {}
+        }
+    }
+}

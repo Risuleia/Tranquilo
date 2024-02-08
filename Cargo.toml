@@ -1,0 +1,24 @@
+[package]
+name = "tranquilo"
+description = "Your personal pomodoro assistant!"
+build = "build.rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.79"
+hex_color = { version = "3.0.0", features = ["serde"]}
+i-slint-backend-winit = "1.4.1"
+serde = { version = "1.0.196", features = ["derive"]}
+single-instance = "0.3.3"
+slint = { version = "1.4.1", default-features = false, features = ["compat-1-2", "std", "backend-winit", "renderer-femtovg", "renderer-software"]}
+
+
+[build-dependencies]
+slint-build = "1.4.1"
+
+[package.metadata.bundle]
+name = "Tranquilo"
+identifier = "io.github.risuleia.tranquilo"
+description = "Your personal pomodoro assistant!"
+icon = ["./icon192.png", "./icon512.png"]

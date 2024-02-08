@@ -1,0 +1,97 @@
+// fonts
+import "../assets/fonts/Comfortaa-SemiBold.ttf";
+import "../assets/fonts/Inconsolata-Bold.ttf";
+import "../assets/fonts/Montserrat-SemiBold.ttf";
+
+import { GridBox } from "std-widgets.slint";
+import { Theme } from "globals.slint";
+
+export component BorderlessWindow inherits Window {
+    no-frame: true;
+    min-width: 200px;
+    min-height: 200px;
+
+    callback close();
+    callback minimize();
+    callback move();
+
+    VerticalLayout {
+        padding: 0;
+
+        Rectangle {
+            height: 40px;
+            padding-top: 10px;
+
+            HorizontalLayout {
+                padding-right: 10px;
+                padding-left: 15px;
+
+                Text {
+                    text: root.title;
+                    font-size: 16pt;
+                    vertical-alignment: center;
+                    horizontal-alignment: left;
+                    color: Theme.text-clr-primary;
+                    TouchArea {
+                        moved => {
+                            if (self.pressed && self.enabled) {
+                                root.move()
+                            }
+                        }
+                    }
+                }
+                Rectangle {
+                    width: 35px;
+                    height: 35px;
+                    
+                    minBtn-ta := TouchArea {
+                        clicked => { root.minimize() }
+                    }
+
+
+                    Image {
+                        source: @image-url("../assets/icons/minimize.svg");
+                        width: 80%;
+                        height: 80%;
+                        y: -5px;
+                        animate colorize {
+                            duration: 250ms;
+                            easing: ease-in-out;
+                        }
+
+                        states [
+                            hvr when minBtn-ta.has-hover: {
+                                colorize: Theme.short-break;
+                            }
+                            nthvr when !minBtn-ta.has-hover: {
+                                colorize: Theme.background-lightest;
+                            }
+                        ]
+                    }
+                }
+                Rectangle {
+                    width: 35px;
+                    height: 35px;
+                    
+                    closeBtn-ta := TouchArea {
+                        clicked => { root.close() }
+                    }
+
+                    Image {
+                        source: @image-url("../assets/icons/close.svg");
+                        width: 80%;
+                        height: 80%;
+                        colorize: closeBtn-ta.has-hover? closeBtn-ta.pressed? Theme.background-light : Theme.long-break : Theme.background-lightest;
+                        animate colorize {
+                            duration: 250ms;
+                        }
+
+                    }
+                }
+            }
+        }
+        Rectangle {
+            @children
+        }
+    }
+}

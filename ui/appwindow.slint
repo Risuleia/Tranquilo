@@ -1,0 +1,33 @@
+import { Button, VerticalBox, GridBox } from "std-widgets.slint";
+import { Theme } from "globals.slint";
+import { BorderlessWindow } from "borderless-window.slint";
+import { SlidingTransition } from "sliding-transition.slint";
+
+export component AppWindow inherits BorderlessWindow {
+    title: "Tranquilo";
+    width: 360px;
+    height: 500px;
+    background: Theme.background;
+
+    callback close-window();
+    callback minimize-window();
+    callback move-window();
+    
+    close() => { 
+        root.close-window();
+    }
+    minimize() => {
+        root.minimize-window()
+    }
+    move() => {
+        root.move-window()
+    }
+    
+    sliding-transition := SlidingTransition {
+        x: parent.width;
+        y: 0;
+        width: root.width;
+        height: parent.height - 38px;
+        expanded: false;
+    }
+}

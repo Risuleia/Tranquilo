@@ -1,0 +1,115 @@
+import { ScrollView, GridBox } from "std-widgets.slint";
+import { Slider } from "slider.slint";
+import { Theme } from "globals.slint";
+
+component ConfigurationSlider inherits Rectangle {
+    in property <string> label;
+    in property <int> min: 1;
+    in property <int> max: 100;
+    in property <string> tail;
+    in property <color> slider-color;
+
+    in-out property <int> value <=> slider.value;
+
+    callback value-changed(int);
+
+    background: #ffffff22;
+    border-radius: 8px;
+    
+    VerticalLayout {
+        padding: 10px;
+        spacing: 1.5rem;
+
+        HorizontalLayout {
+            alignment: start;
+            spacing: 1rem;
+
+            Text {
+                text: root.label;
+                font-family: "Montserrat";
+                font-size: 14pt;
+                font-weight: 550;
+                letter-spacing: 0.5px;
+                color: Theme.text-clr-secondary;
+            }
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                height: 20px;
+                border-radius: 5px;
+                background: Theme.background-lightest.darker(1.5);
+                width: text.width + 10px;
+                
+                text := Text {
+                    text: "\{slider.value}\{root.tail}";
+                    font-size: 12pt;
+                    font-weight: 550;
+                    font-family: "Inconsolata";
+                    color: Theme.foreground-darker;
+                }
+            }
+        }
+        slider := Slider {
+            vertical: false;
+            minimum: root.min;
+            maximum: root.max;
+            color: root.slider-color;
+            placeholder-color: Theme.foreground-darkest.darker(1);
+            fill-color: root.slider-color;
+            bob-hover-color: Theme.accent.brighter(0.8);
+
+            value-changed(int) => {
+                root.value-changed(int)
+            }
+        }
+    }
+}
+
+export component Settings inherits ScrollView {
+    width: 100%;
+    
+    VerticalLayout {
+        padding: 2rem;
+        // width: 100%;
+        spacing: 1rem;
+
+        Text {
+            text: "Timer";
+            font-family: "Comfortaa";
+            font-size: 18pt;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            horizontal-alignment: left;
+        }
+        focus-slider := ConfigurationSlider {
+            width: 100%;
+            label: "Focus";
+            tail: ":00";
+            min: 1;
+            max: 90;
+            slider-color: Theme.focus-round;
+        }
+        short-break-slider := ConfigurationSlider {
+            width: 100%;
+            label: "Short Break";
+            tail: ":00";
+            min: 1;
+            max: 90;
+            slider-color: Theme.short-break;
+        }
+        long-break-slider := ConfigurationSlider {
+            width: 100%;
+            label: "Long Break";
+            tail: ":00";
+            min: 1;
+            max: 90;
+            slider-color: Theme.long-break;
+        }
+        rounds-slider := ConfigurationSlider {
+            width: 100%;
+            label: "Rounds";
+            min: 1;
+            max: 15;
+            slider-color: Theme.accent;
+        }
+    }
+}
