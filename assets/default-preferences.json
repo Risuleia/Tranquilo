@@ -1,0 +1,16 @@
+{
+    "alwaysOnTop": true,
+    "autoStartFocusTimer": true,
+    "autoStartBreakTimer": true,
+    "minimizeToTray": false,
+    "minimizeToTrayOnClose": false,
+    "notifications": false,
+    "theme": "Eclipse",
+    "song": "Evening Improvisation",
+    "focus": 25,
+    "shortBreak": 5,
+    "longBreak": 15,
+    "rounds": 4,
+    "ambientVolume": 75,
+    "alertsVolume": 100
+}

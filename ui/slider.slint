@@ -1,7 +1,7 @@
 export component Slider {
-    in-out property <int> value: 1;
+    in-out property <int> value: 0;
     
-    in property <int> minimum: 1;
+    in property <int> minimum: 0;
     in property <int> maximum: 100;
     in property <int> step: 1;
     in-out property <color> color: red;
@@ -10,6 +10,9 @@ export component Slider {
     in property <color> fill-color: red;
     in property <color> bob-hover-color: red;
     in property <bool> vertical: false;
+
+    in property <length> slider-width: 5px;
+    in property <length> slider-border-radius: 3px;
 
     callback value-changed(int);
 
@@ -21,14 +24,16 @@ export component Slider {
 
     placeholder-track := Rectangle {
         y: (parent.height - self.height) / 2;
-        border-radius: 2px;
+        border-radius: slider-border-radius;
+        padding-left: 20px;
         background: parent.placeholder-color;
         animate background {
             duration: 150ms;
         }
     }
     fill-track := Rectangle {
-        border-radius: 2px;
+        border-radius: slider-border-radius;
+        padding-left: 20px;
         background: parent.color;
         animate background {
             duration: 150ms;
@@ -53,11 +58,11 @@ export component Slider {
         property <int> pressed-value;
         property <int> minimum: parent.minimum;
         property <int> maximum: parent.maximum;
-        property <int> step: parent.step;
+        property <int> step-size: (self.maximum - self.minimum) / parent.step;
 
         pointer-event(e) => {
             if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
-                root.value = self.pressed-value
+                self.pressed-value = root.value
             }
         }
         moved => {
@@ -84,11 +89,11 @@ export component Slider {
 
         key-pressed(e) => {
             if (self.enabled && e.text == Key.RightArrow) {
-                root.value = Math.min(root.value + slider-touch.step, slider-touch.maximum);
+                root.value = Math.min(root.value + slider-touch.step-size, slider-touch.maximum);
                 root.value-changed(root.value);
                 accept
             } else if (self.enabled && e.text == Key.LeftArrow) {
-                root.value = Math.max(root.value - slider-touch.step, slider-touch.minimum);
+                root.value = Math.max(root.value - slider-touch.step-size, slider-touch.minimum);
                 root.value-changed(root.value);
                 accept
             } else {
@@ -99,7 +104,7 @@ export component Slider {
 
     states [
         verticle when root.vertical : {
-            placeholder-track.width: 5px;
+            placeholder-track.width: root.slider-width;
             placeholder-track.height: self.height;
 
             fill-track.x: placeholder-track.x;
@@ -113,7 +118,7 @@ export component Slider {
 
         horizontal when !root.vertical : {
             placeholder-track.width: self.width;
-            placeholder-track.height: 5px;
+            placeholder-track.height: root.slider-width;
 
             fill-track.x: 0;
             fill-track.y: (self.height - fill-track.height) / 2;

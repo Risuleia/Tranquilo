@@ -1,9 +1,8 @@
 export global Theme {
-    in-out property <int> theme-idx: 0;
+    in-out property <int> theme-index: 0;
     in-out property <brush> long-break: #af486d;
     in-out property <brush> short-break: #c3cffb;
     in-out property <brush> focus-round: #eebc7f;
-    // in-out property <brush> break-round: #a6dc98;
     in-out property <brush> background: #0c0912;
     in-out property <brush> background-light: #343132;
     in-out property <brush> background-lightest: #837c7e;
@@ -19,8 +18,8 @@ export global Theme {
 
 export struct JsonTheme {
     name: string,
-    long-round: brush,
-    short-round: brush,
+    long-break: brush,
+    short-break: brush,
     focus-round: brush,
     background: brush,
     background-light: brush,
@@ -29,5 +28,72 @@ export struct JsonTheme {
     foreground-darker: brush,
     foreground-darkest: brush,
     accent: brush,
-    letter-spacing: length
+    nav: brush,
+    text-clr-primary: brush,
+    text-clr-secondary: brush,
+}
+
+export enum TimerType { focus, short-break, long-break }
+export enum VolumeState { off, low, medium, high }
+export enum TimerAction { start, stop, reset, skip }
+export struct TimerConfig {
+    focus: duration,
+    short-break: duration,
+    long-break: duration,
+    rounds: int
+}
+
+export enum BoolSettingTypes {
+    AlwaysOnTop,
+    AutoStartBreakTimer,
+    AutoStartFocusTimer,
+    Notifications,
+    MinimizeToTray,
+    MinimizeToTrayOnClose
+}
+
+export enum IntSettingTypes {
+    Focus,
+    ShortBreak,
+    LongBreak,
+    Rounds,
+    AmbientVolume,
+    AlertsVolume
+}
+
+export global Settings {
+    in-out property <bool> always-on-top;
+    in-out property <bool> auto-start-break-timer;
+    in-out property <bool> auto-start-focus-timer;
+    in-out property <bool> minimize-to-tray;
+    in-out property <bool> minimize-to-tray-on-close;
+    in-out property <bool> notifications;
+
+    in-out property <int> focus;
+    in-out property <int> short-break;
+    in-out property <int> long-break;
+    in-out property <int> rounds;
+    in-out property <int> ambient-volume;
+    in-out property <int> alerts-volume;
+
+    in-out property <string> theme;
+    in-out property <string> song;
+
+    callback bool-changed(BoolSettingTypes, bool);
+    callback int-changed(IntSettingTypes, int);
+}
+
+export enum TaskStatus { Completed, Pending, Cancelled }
+export struct Task {
+    id: string,
+    text: string,
+    status: TaskStatus
+}
+
+export global Tasks {
+    in-out property <[Task]> tasks;
+
+    callback set-status(string, TaskStatus);
+    callback add-task(string);
+    callback delete-task(string);
 }

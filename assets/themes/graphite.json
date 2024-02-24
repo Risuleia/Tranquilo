@@ -1,0 +1,18 @@
+{
+    "name": "Graphite",
+    "colors": {
+        "--focus-round": "#af486a",
+        "--long-break": "#9d74cf",
+        "--short-break": "#aa9fbd",
+        "--background": "#ebebea",
+        "--background-light": "#fcfcfc",
+        "--background-lightest": "#adafb1",
+        "--foreground": "#8c91ab",
+        "--foreground-darker": "#4a4e56",
+        "--foreground-darkest": "#656a75",
+        "--accent": "#08568c",
+        "--nav": "#172833",
+        "--text-clr-primary": "#3d96d1",
+        "--text-clr-secondary": "#86a2b5"
+    }
+}
