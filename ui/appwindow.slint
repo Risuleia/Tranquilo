@@ -1,12 +1,29 @@
 import { Button, VerticalBox, GridBox } from "std-widgets.slint";
-import { Theme } from "globals.slint";
+import { Theme, JsonTheme, Settings, TimerAction, TimerConfig, TimerType, VolumeState, Task, TaskStatus, Tasks } from "globals.slint";
+import { ThemeCallbacks } from "./pages/settings/themes-settings.slint";
+import { SongCallbacks } from "./pages/settings/music-settings.slint";
 import { BorderlessWindow } from "borderless-window.slint";
 import { SlidingTransition } from "sliding-transition.slint";
+
+export {
+    Theme,
+    JsonTheme,
+    Settings,
+    ThemeCallbacks,
+    SongCallbacks,
+    TimerAction,
+    TimerConfig,
+    TimerType,
+    VolumeState,
+    Task,
+    TaskStatus,
+    Tasks
+}
 
 export component AppWindow inherits BorderlessWindow {
     title: "Tranquilo";
     width: 360px;
-    height: 500px;
+    height: 550px;
     background: Theme.background;
 
     callback close-window();
@@ -22,6 +39,34 @@ export component AppWindow inherits BorderlessWindow {
     move() => {
         root.move-window()
     }
+
+    in-out property <bool> active: false;
+
+    in property <duration> target-time: timer-config.focus;
+    in-out property <duration> remaining-time: target-time;
+
+    in-out property <TimerConfig> timer-config: sliding-transition.timer-config;
+
+    in property <TimerType> active-timer: focus;
+    in property <int> active-round: 1;
+
+    in-out property <image> circle-progress: @image-url("../assets/Circle.svg");
+
+    in-out property <int> ambient-volume: Settings.ambient-volume;
+    in-out property <int> alerts-volume: Settings.alerts-volume;
+    
+    callback action-timer(TimerAction);
+
+    callback tick(duration);
+    callback change-timer();
+
+    tick(passed-time) => {
+        root.remaining-time = max(root.remaining-time - passed-time, 0);
+
+        if (root.remaining-time == 0) {
+            change-timer();
+        }
+    }
     
     sliding-transition := SlidingTransition {
         x: parent.width;
@@ -29,5 +74,15 @@ export component AppWindow inherits BorderlessWindow {
         width: root.width;
         height: parent.height - 38px;
         expanded: false;
+
+        active: root.active;
+        target-time: root.target-time;
+        remaining-time: root.remaining-time;
+        active-timer: root.active-timer;
+        active-round: root.active-round;
+
+        circle-progress: root.circle-progress;
+
+        action-timer(action) => { root.action-timer(action) }
     }
 }

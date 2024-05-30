@@ -1,8 +1,8 @@
 import { GridBox } from "std-widgets.slint";
-import { Theme } from "globals.slint";
-import { Main } from "main.slint";
-import { Stats } from "stats.slint";
-import { Settings } from "settings.slint";
+import { Main } from "pages/main.slint";
+import { TasksView } from "pages/tasks.slint";
+import { Settings } from "pages/settings.slint";
+import { Theme, TimerConfig, TimerType, TimerAction } from "globals.slint";
 
 component NavBtn inherits Rectangle {
     in-out property <bool> active;
@@ -70,7 +70,7 @@ component Nav inherits Rectangle {
         for page-icon[index] in [
             @image-url("../assets/icons/settings.svg"),
             @image-url("../assets/icons/clock.svg"),
-            @image-url("../assets/icons/stats.svg"),
+            @image-url("../assets/icons/tasks.svg"),
         ] : NavBtn {
             y: 0px;
             x: self.width * index;
@@ -131,6 +131,17 @@ component Nav inherits Rectangle {
 }
 
 export component TabContainer inherits VerticalLayout {
+    in-out property <bool> active;
+    in-out property <duration> target-time;
+    in-out property <TimerType> active-timer;
+    in-out property <int> active-round;
+    in-out property <duration> remaining-time;
+    in-out property <TimerConfig> timer-config: settings.timer-config;
+
+    in-out property <image> circle-progress;
+
+    callback action-timer(TimerAction);
+    
     padding-bottom: 2rem;
 
     Rectangle {
@@ -140,8 +151,19 @@ export component TabContainer inherits VerticalLayout {
                 easing: ease-in-out;
             }
             visible: self.opacity > 0;
+
+            active: root.active;
+            target-time: root.target-time;
+            active-timer: root.active-timer;
+            active-round: root.active-round;
+            remaining-time: root.remaining-time;
+            timer-config: root.timer-config;
+            
+            circle-progress: root.circle-progress;
+
+            action-timer(action) => { root.action-timer(action) }
         }
-        stats := Stats {
+        tasks := TasksView {
             animate opacity, x {
                 duration: 350ms;
                 easing: ease-in-out;
@@ -161,22 +183,23 @@ export component TabContainer inherits VerticalLayout {
         tab0 when nav.active-page == 0: {
             main.opacity: 0;
             settings.opacity: 100%;
-            stats.opacity: 0;
+            tasks.opacity: 0;
         }
         tab1 when nav.active-page == 1: {
             main.opacity: 100%;
             settings.opacity: 0;
-            stats.opacity: 0;
+            tasks.opacity: 0;
         }
         tab2 when nav.active-page == 2: {
             main.opacity: 0;
             settings.opacity: 0;
-            stats.opacity: 100%;
+            tasks.opacity: 100%;
         }
     ]
 
     Rectangle {
-        height: nav.height + 35px;
+
+        height: nav.height + 50px;
         padding-top: 5rem;
         background: Theme.background;
 

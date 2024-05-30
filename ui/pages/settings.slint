@@ -1,0 +1,21 @@
+import { ScrollView, VerticalBox } from "std-widgets.slint";
+import { Theme, TimerConfig } from "../globals.slint";
+import { TimerSettings } from "settings/timer-settings.slint";
+import { ThemesSettings } from "settings/themes-settings.slint";
+import { ConfigSettings } from "settings/config-settings.slint";
+import { MusicSettings } from "settings/music-settings.slint";
+
+export component Settings inherits ScrollView {
+
+    in-out property <TimerConfig> timer-config: timer.config;
+
+    VerticalLayout {
+        padding: 2rem;
+        spacing: 2rem;
+
+        timer := TimerSettings {}
+        music := MusicSettings {}
+        themes := ThemesSettings {}
+        config := ConfigSettings {}
+    }
+}

@@ -1,0 +1,37 @@
+import { Theme } from "globals.slint";
+
+export component CheckBox inherits Rectangle {
+    callback clicked <=> checkbox-touch.clicked;
+    in-out property <bool> checked;
+
+    width: self.height;
+
+    checkbox := Rectangle {
+        width: 18px;
+        height: self.width;
+        border-color: Theme.background-lightest;
+        border-radius: self.width * 50%;
+        border-width: 2px;
+        
+        animate background {
+            duration: 200ms;
+        }
+    }
+
+    checkbox-touch := TouchArea {
+        clicked => {}
+    }
+
+    states [
+        checked-unhovered when root.checked && !checkbox-touch.has-hover: {
+            checkbox.border-width: 0;
+            checkbox.background: Theme.accent;
+        }
+        checked-hovered when root.checked && checkbox-touch.has-hover: {
+            checkbox.background: Theme.accent;
+        }
+        unchecked-hovered when !root.checked && checkbox-touch.has-hover: {
+            checkbox.border-color: Theme.accent;
+        }
+    ]
+}

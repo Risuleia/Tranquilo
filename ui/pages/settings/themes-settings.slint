@@ -1,0 +1,100 @@
+import { HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { Theme, JsonTheme } from "../../globals.slint";
+
+export global ThemeCallbacks {
+    pure callback theme-changed(int, JsonTheme);
+    in property <[JsonTheme]> themes;
+}
+
+component ClickableCapsule inherits Rectangle {
+    in property <string> label: "Nord Dark";
+    in property <brush> capsule-color: @linear-gradient(
+        90deg,
+        Theme.accent,
+        Theme.focus-round
+    );
+    in-out property <brush> txt-color: #000.transparentize(0.4);
+
+    callback select;
+    in-out property <bool> active;
+    
+    height: 35px;
+    border-radius: 18px;
+    border-width: 2px;
+    background: capsule-color.darker(1.2);
+
+    animate background, border-color, drop-shadow-blur, drop-shadow-color {
+        duration: 200ms;
+        easing: ease-in-out;
+    }
+    
+    Rectangle {
+        padding-left: 10px;
+        padding-right: 10px;
+        
+        Text {
+            text: label;
+            font-size: 12.5pt;
+            font-family: "Montserrat";
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            color: txt-color;
+        }
+        
+        clickable-touch := TouchArea {
+            mouse-cursor: MouseCursor.pointer;
+            clicked => {
+                root.select()
+            }
+        }
+        
+    }
+    
+    states [
+        inactive-hovered when !active && clickable-touch.has-hover: {
+            background: capsule-color.darker(0.75);
+            border-color: capsule-color;
+        }
+        active when active: {
+            background: capsule-color;
+            drop-shadow-color: Theme.foreground-darkest.brighter(0.1).transparentize(0.4);
+            drop-shadow-blur: 30px;
+        }
+    ]
+}
+
+export component ThemesSettings inherits VerticalLayout {
+    in-out property <int> active-theme: Theme.theme-index;
+    in property <[JsonTheme]> themes: ThemeCallbacks.themes;
+    
+    spacing: 1rem;
+    
+    Text {
+        text: "Themes";
+        font-family: "Kanit";
+        font-size: 15pt;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        horizontal-alignment: left;
+        color: Theme.foreground;
+    }
+    VerticalBox {
+        spacing: 1.5rem;
+        alignment: stretch;
+
+        for theme[index] in root.themes: ClickableCapsule {
+            capsule-color: @linear-gradient(
+                90deg,
+                theme.accent,
+                theme.focus-round
+            );
+            label: theme.name;
+            active: root.active-theme == index;
+
+            select => {
+                ThemeCallbacks.theme-changed(index, theme)
+            }
+        }
+    }
+}

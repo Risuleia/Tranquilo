@@ -1,0 +1,137 @@
+import { Theme, Settings, IntSettingTypes, TimerConfig } from "../../globals.slint";
+import { Slider } from "../../slider.slint";
+
+component ConfigurationSlider inherits Rectangle {
+    in property <string> label;
+    in property <int> min: 1;
+    in property <int> max: 100;
+    in property <string> tail;
+    in property <color> slider-color;
+
+    in-out property <int> value <=> slider.value;
+
+    callback value-changed(int);
+
+    background: #ffffff22;
+    border-radius: 8px;
+    
+    VerticalLayout {
+        padding: 10px;
+        spacing: 0.8rem;
+
+        HorizontalLayout {
+            alignment: start;
+            spacing: 0.5rem;
+
+            Text {
+                text: root.label;
+                font-family: "Montserrat";
+                font-size: 12pt;
+                font-weight: 550;
+                letter-spacing: 0.5px;
+                color: Theme.text-clr-secondary;
+            }
+            Rectangle {
+                y: (parent.height - self.height) / 2;
+                height: 20px;
+                border-radius: 5px;
+                background: Theme.background-lightest.darker(1.5);
+                width: text.width + 10px;
+                
+                text := Text {
+                    text: "\{slider.value}\{root.tail}";
+                    font-size: 10pt;
+                    font-weight: 550;
+                    font-family: "Inconsolata";
+                    color: Theme.foreground;
+                }
+            }
+        }
+        slider := Slider {
+            value: 1;
+            vertical: false;
+            minimum: root.min;
+            maximum: root.max;
+            color: root.slider-color;
+            placeholder-color: Theme.foreground-darkest.darker(1);
+            fill-color: root.slider-color;
+            bob-hover-color: Theme.accent.brighter(0.8);
+
+            value-changed(int) => {
+                root.value-changed(int)
+            }
+        }
+    }
+}
+
+export component TimerSettings inherits VerticalLayout {
+    in-out property <TimerConfig> config: {
+        focus: focus-slider.value * 60s,
+        short-break: short-break-slider.value * 60s,
+        long-break: long-break-slider.value * 60s,
+        rounds: rounds-slider.value,
+    };
+
+    spacing: 1rem;
+    
+    Text {
+        text: "Timer";
+        font-family: "Kanit";
+        font-size: 15pt;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        horizontal-alignment: left;
+        color: Theme.foreground;
+    }
+    focus-slider := ConfigurationSlider {
+        width: 100%;
+        label: "Focus";
+        tail: ":00";
+        min: 1;
+        max: 90;
+        slider-color: Theme.focus-round;
+        value: Settings.focus;
+
+        value-changed(int) => {
+            Settings.int-changed(IntSettingTypes.Focus, int)
+        }
+    }
+    short-break-slider := ConfigurationSlider {
+        width: 100%;
+        label: "Short Break";
+        tail: ":00";
+        min: 1;
+        max: 30;
+        slider-color: Theme.short-break;
+        value: Settings.short-break;
+
+        value-changed(int) => {
+            Settings.int-changed(IntSettingTypes.ShortBreak, int)
+        }
+    }
+    long-break-slider := ConfigurationSlider {
+        width: 100%;
+        label: "Long Break";
+        tail: ":00";
+        min: 1;
+        max: 90;
+        slider-color: Theme.long-break;
+        value: Settings.long-break;
+
+        value-changed(int) => {
+            Settings.int-changed(IntSettingTypes.LongBreak, int)
+        }
+    }
+    rounds-slider := ConfigurationSlider {
+        width: 100%;
+        label: "Rounds";
+        min: 1;
+        max: 15;
+        slider-color: Theme.accent;
+        value: Settings.rounds;
+
+        value-changed(int) => {
+            Settings.int-changed(IntSettingTypes.Rounds, int)
+        }
+    }
+}

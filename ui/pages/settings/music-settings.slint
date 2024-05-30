@@ -1,0 +1,111 @@
+import { Theme, Settings } from "../../globals.slint";
+import { VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export global SongCallbacks {
+    pure callback song-changed(string);
+    in property <[string]> songs;
+}
+
+component Song inherits Rectangle {
+    in property <string> name: "Evening Improvisation";
+    in-out property <bool> selected;
+    in-out property <bool> preview;
+
+    callback song-changed(string);
+
+    Rectangle {
+        background: Theme.background-light;
+        drop-shadow-color: transparent;
+        drop-shadow-blur: 20px;
+        drop-shadow-offset-x: 3px;
+        drop-shadow-offset-y: 5px;
+        border-radius: self.height * 50%;
+        border-width: 3px;
+
+        animate background, drop-shadow-color, border-color {
+            duration: 300ms;
+            easing: ease-in-out;
+        }
+
+        HorizontalBox {
+            spacing: 10px;
+            alignment: space-between;
+
+            VerticalBox {
+                padding-left: 10px;
+
+                Text {
+                    text: root.name;
+                    vertical-alignment: center;
+                    font-family: "Comfortaa";
+                    font-weight: 550;
+                    font-size: 12pt;
+                    color: selected ? #fff : Theme.foreground-darkest.darker(0.1);
+                }
+            }
+            Rectangle {
+                width: 40px;
+                height: self.width;
+                border-radius: self.width;
+                background: Theme.foreground-darkest.darker(0.5);
+
+                Image {
+                    source: !selected ? @image-url("../../../assets/icons/play.svg") : @image-url("../../../assets/icons/pause.svg");
+
+                    states [
+                        selected when selected: {
+                            colorize: Theme.long-break.darker(0.2);
+                        }
+                    ]
+                }
+            }
+        }
+        song-touch := TouchArea {
+            clicked => {
+                root.song-changed(root.name)
+            }
+        }
+
+        states [
+            selected when selected: {
+                background: Theme.long-break;
+                drop-shadow-color: Theme.long-break.transparentize(0.2);
+            }
+            hovered when song-touch.has-hover: {
+                background: Theme.background-light.darker(0.3);
+                border-color: Theme.long-break.darker(0.4);
+            }
+        ]
+    }
+
+}
+
+export component MusicSettings inherits VerticalLayout {
+    in-out property <string> selected-song: Settings.song;
+    in property <[string]> songs: SongCallbacks.songs;
+
+    spacing: 1rem;
+
+    Text {
+        text: "Music";
+        font-family: "Kanit";
+        font-size: 15pt;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        horizontal-alignment: left;
+        color: Theme.foreground;
+    }
+    VerticalBox {
+        spacing: 1.5rem;
+        alignment: stretch;
+
+        for song in root.songs: Song {
+            name: song;
+            selected: song == Settings.song;
+
+            song-changed(string) => {
+                SongCallbacks.song-changed(string)
+            }
+        }
+    }
+}

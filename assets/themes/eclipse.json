@@ -1,0 +1,18 @@
+{
+    "name": "Eclipse",
+    "colors": {
+        "--long-break": "#af486d",
+        "--short-break": "#c3cffb",
+        "--focus-round": "#eebc7f",
+        "--background": "#0c0912",
+        "--background-light": "#343132",
+        "--background-lightest": "#837c7e",
+        "--foreground": "#dfdfd7",
+        "--foreground-darker": "#bec0c0",
+        "--foreground-darkest": "#adadae",
+        "--accent": "#7147f0",
+        "--nav": "#1d2545",
+        "--text-clr-primary": "#b4a3f8",
+        "--text-clr-secondary": "#cbc5db"
+    }
+}

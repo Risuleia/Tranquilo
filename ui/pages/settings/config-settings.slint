@@ -1,0 +1,79 @@
+import { HorizontalBox, VerticalBox } from "std-widgets.slint";
+import { Theme, BoolSettingTypes, Settings } from "../../globals.slint";
+import { CheckBox } from "../../checkbox.slint";
+
+component ConfigOption inherits Rectangle {
+    in property <string> label;
+    in-out property <bool> active: false;
+
+    height: 45px;
+    background: Theme.background-light;
+    border-radius: 8px;
+
+    animate background {
+        duration: 350ms;
+        easing: ease-in-out;
+    }
+
+    HorizontalBox {
+        alignment: space-between;
+
+        text-label := Text {
+            text: root.label;
+            vertical-alignment: center;
+            font-size: 11pt;
+            font-family: "Montserrat";
+            color: Theme.foreground-darkest;
+
+            animate color {
+                duration: 350ms;
+                easing: ease-in-out;
+            }
+        }
+        @children
+    }
+
+    states [
+        active when active: {
+            background: Theme.text-clr-primary.transparentize(0.6);
+            text-label.color: Theme.foreground;
+        }
+    ]
+
+}
+
+export component ConfigSettings inherits VerticalLayout {
+    spacing: 1rem;
+    
+    Text {
+        text: "Config";
+        font-family: "Kanit";
+        font-size: 15pt;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        horizontal-alignment: left;
+        color: Theme.foreground;
+    }
+    VerticalBox {
+        spacing: 1rem;
+
+        for setting[index] in [
+            { name: "Always On Top", state: Settings.always-on-top, setting-param: BoolSettingTypes.AlwaysOnTop },
+            { name: "Auto-start Focus Timer", state: Settings.auto-start-focus-timer, setting-param: BoolSettingTypes.AutoStartFocusTimer },
+            { name: "Auto-start Break Timer", state: Settings.auto-start-break-timer, setting-param: BoolSettingTypes.AutoStartBreakTimer },
+            { name: "Minimize to Tray", state: Settings.minimize-to-tray, setting-param: BoolSettingTypes.MinimizeToTray },
+            { name: "Minimize to Tray on Close", state: Settings.minimize-to-tray-on-close, setting-param: BoolSettingTypes.MinimizeToTrayOnClose },
+            { name: "Desktop Notifications", state: Settings.notifications, setting-param: BoolSettingTypes.Notifications }
+        ]: ConfigOption {
+            label: setting.name;
+            active <=> checkbox.checked;
+
+            checkbox := CheckBox {
+                checked: setting.state;
+                clicked => {
+                    Settings.bool-changed(setting.setting-param, self.checked)
+                }
+            }
+        }
+    }
+}

@@ -1,9 +1,19 @@
-import { Theme } from "globals.slint";
 import { TabContainer } from "tabs.slint";
+import { Theme, TimerConfig, TimerType, TimerAction } from "globals.slint";
 
 export component SlidingTransition {
     in-out property <bool> expanded;
     out property <length> continuation-x;
+
+    in-out property <bool> active;
+    in-out property <duration> target-time;
+    in-out property <TimerType> active-timer;
+    in-out property <int> active-round;
+    in-out property <duration> remaining-time;
+    in-out property <TimerConfig> timer-config: tab-container.timer-config;
+    in-out property <image> circle-progress;
+
+    callback action-timer(TimerAction);
 
     animate continuation-x {
         duration: 300ms;
@@ -30,7 +40,17 @@ export component SlidingTransition {
         content := Rectangle {
             clip: true;
 
-            tab-container := TabContainer {}
+            tab-container := TabContainer {
+                active: root.active;
+                target-time: root.target-time;
+                remaining-time: root.remaining-time;
+                active-timer: root.active-timer;
+                active-round: root.active-round;
+
+                circle-progress: root.circle-progress;
+
+                action-timer(action) => { root.action-timer(action) }
+            }
         }
     }
 }
