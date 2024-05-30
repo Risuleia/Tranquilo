@@ -4,7 +4,7 @@ use slint::Color;
 use directories::ProjectDirs;
 use walkdir::WalkDir;
 use std::{
-    fs::{File, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{BufReader, BufWriter},
     path::Path,
     sync::OnceLock
@@ -133,7 +133,7 @@ impl Into<JsonTheme> for JsonThemeTemplate {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JsonSettings {
     pub always_on_top: bool,
@@ -156,13 +156,18 @@ static CONFIG_DIR: OnceLock<Option<ProjectDirs>> = OnceLock::new();
 static DEFAULT_THEME: OnceLock<JsonThemeTemplate> = OnceLock::new();
 static DEFAULT_SONG: OnceLock<String> = OnceLock::new();
 
-fn get_dir() -> Option<&'static Path> {
+pub fn get_dir(folder: &str) -> Option<&'static Path> {
     if let Some(dirs) = CONFIG_DIR.get_or_init(|| ProjectDirs::from("io", "Risuleia", "Tranquilo")) {
-        Some(dirs.config_dir())
+        match folder {
+            "config" => Some(dirs.config_dir()),
+            "data" => Some(dirs.data_dir()),
+            _ => None
+        }
     } else {
         None
     }
 }
+
 
 pub fn default_theme() -> &'static JsonThemeTemplate {
     DEFAULT_THEME.get_or_init(|| {
@@ -193,7 +198,7 @@ pub fn default_song() -> &'static String {
 }
 
 pub fn load_settings() -> JsonSettings {
-    if let Some(config_dir) = get_dir() {
+    if let Some(config_dir) = get_dir("config") {
         let file = config_dir.join("config.json");
         if let Ok(set_file) = File::open(file) {
             let reader = BufReader::new(set_file);
@@ -207,7 +212,7 @@ pub fn load_settings() -> JsonSettings {
 }
 
 pub fn load_themes() -> Vec<JsonTheme> {
-    let theme_dir = Path::new("assets/themes");
+    let theme_dir = Path::new("../assets/themes");
 
     let mut themes: Vec<JsonTheme> = WalkDir::new(theme_dir)
         .into_iter()
@@ -240,7 +245,7 @@ pub fn load_themes() -> Vec<JsonTheme> {
 }
 
 pub fn load_songs() -> Vec<String> {
-    let music_dir = Path::new("assets/music");
+    let music_dir = Path::new("../assets/music");
 
     let mut songs: Vec<String> = WalkDir::new(music_dir)
         .into_iter()
@@ -275,7 +280,7 @@ fn default_settings() -> JsonSettings {
 }
 
 pub fn save_settings(settings: JsonSettings) {
-    if let Some(config_dir) = get_dir() {
+    if let Some(config_dir) = get_dir("config") {
         std::fs::create_dir_all(config_dir).unwrap();
 
         let file = config_dir.join("config.json");
@@ -291,9 +296,24 @@ pub fn save_settings(settings: JsonSettings) {
     }
 }
 
+pub fn create_db() {
+    if let Some(data_dir) = get_dir("data") {
+        std::fs::create_dir_all(data_dir).unwrap();
 
-    // let theme_dir = {
-    //     let mut theme_dir = PathBuf::from("get_dir().unwrap()");
-    //     theme_dir.push("themes");
-    //     theme_dir
-    // };
+        let _ = fs::read_dir(data_dir).and_then(|mut r| {
+            Ok(if !r.any(|f| {
+                f.unwrap().file_name() == "tasks.db"
+            }) {
+                let file = data_dir.join("tasks.db");
+                OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .open(file)
+                    .unwrap();
+            })
+        });
+
+    }
+}

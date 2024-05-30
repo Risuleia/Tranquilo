@@ -4,30 +4,36 @@ use std::{
     sync::{Arc, Mutex},
     thread
 };
+use cpal::{traits::HostTrait, Device};
 use rodio::{Decoder, OutputStream, Sink};
-use cpal::traits::HostTrait;
 
 pub struct MusicPlayer {
     sink: Arc<Mutex<Sink>>,
-    _stream: Arc<Mutex<OutputStream>>
+    _stream: Arc<Mutex<OutputStream>>,
 }
+
 
 impl MusicPlayer {
     pub fn new() -> Self {
         let host = cpal::default_host();
         let output_device = host.default_output_device().expect("No output device available");
 
-        let (_stream, stream_handle) = OutputStream::try_from_device(&output_device).expect("Failed to create stream");
-        let sink = Sink::try_new(&stream_handle).unwrap();
+        let (sink, _stream) = Self::create_sink(&output_device);
 
         MusicPlayer { 
             sink: Arc::new(Mutex::new(sink)),
-            _stream: Arc::new(Mutex::new(_stream))
+            _stream: Arc::new(Mutex::new(_stream)),
         }
     }
 
+    fn create_sink(device: &Device) -> (Sink, OutputStream) {
+        let (_stream, stream_handle) = OutputStream::try_from_device(device).expect("Failed to create sink");
+        let sink = Sink::try_new(&stream_handle).unwrap();
+        (sink, _stream)
+    }
+
     pub fn play(&mut self, file_name: String) {
-        let path_str = format!("assets/music/{}.mp3", file_name);
+        let path_str = format!("../assets/music/{}.mp3", file_name);
         
         let cloned_sink = Arc::clone(&self.sink);
 
@@ -59,3 +65,4 @@ impl MusicPlayer {
         sink.set_volume(volume)
     }
 }
+

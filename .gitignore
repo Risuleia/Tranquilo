@@ -1,1 +1,5 @@
 /target
+/assets/tasks.db
+/wix
+wix.toml
+/assets.wxs

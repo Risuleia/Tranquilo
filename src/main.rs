@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod settings;
 mod music_player;
 mod db;
@@ -10,7 +12,7 @@ use chrono::Utc;
 use single_instance::SingleInstance;
 use slint::{ComponentHandle, Model, ModelRc, PlatformError, Timer, TimerMode, VecModel};
 
-use settings::JsonSettings;
+use settings::{get_dir, create_db, JsonSettings};
 use music_player::MusicPlayer;
 use db::{Database, Task as TaskStruct};
 
@@ -81,7 +83,7 @@ impl AppWindow {
                 ambient_volume: self.global::<Settings>().get_ambient_volume(),
                 alerts_volume: self.global::<Settings>().get_alerts_volume(),
             }
-        )
+        );
     }
 }
 
@@ -94,6 +96,8 @@ struct Tranquilo {
 
 impl Tranquilo {
     fn new() -> Self {
+        create_db();
+
         let settings: JsonSettings = settings::load_settings();
         let themes: Vec<JsonTheme> = settings::load_themes();
         let songs: Vec<String> = settings::load_songs();
@@ -111,7 +115,7 @@ impl Tranquilo {
 
         let music_player = Arc::new(Mutex::new(MusicPlayer::new()));
 
-        let db = Arc::new(Mutex::new(Database::new("assets/tasks.db")));
+        let db = Arc::new(Mutex::new(Database::new(get_dir("data").unwrap().join("tasks.db"))));
         db.lock().unwrap().init_db();
 
         let tasks_model = Rc::new(VecModel::from(
@@ -161,6 +165,7 @@ impl Tranquilo {
     }
 }
 
+
 fn main() -> Result<()> {
     let instance = SingleInstance::new("io.risuleia.tranquilo").unwrap();
     if !instance.is_single() {
@@ -198,7 +203,7 @@ fn main() -> Result<()> {
                 }
             }
             setting_handle.save_settings();
-        });
+    });
 
     let set_int_handle = tranquilo.window.as_weak();
     tranquilo.window.global::<Settings>()
@@ -228,13 +233,21 @@ fn main() -> Result<()> {
                 }
             }
             setting_handle.save_settings();
-        });
+    });
 
     let close_handle = tranquilo.window.as_weak();
     tranquilo.window.on_close_window(move || {
         let close_handle = close_handle.upgrade().unwrap();
-        close_handle.hide().unwrap();
-        });
+
+        if close_handle.global::<Settings>().get_minimize_to_tray_on_close() {
+            i_slint_backend_winit::WinitWindowAccessor::with_winit_window(
+                close_handle.window(),
+                |window| window.set_minimized(true)
+            );
+        } else {
+            close_handle.hide().unwrap();
+        }
+    });
 
     let minimize_handle = tranquilo.window.as_weak();
     tranquilo.window.on_minimize_window(move || {
@@ -243,7 +256,7 @@ fn main() -> Result<()> {
             minimize_handle.window(),
             |window| window.set_minimized(true)
         );
-        });
+    });
 
     let move_hande = tranquilo.window.as_weak();
     tranquilo.window.on_move_window(move || {
@@ -252,7 +265,7 @@ fn main() -> Result<()> {
             move_handle.window(),
             |window| window.drag_window()
         );
-        });
+    });
     
     let theme_handle = tranquilo.window.as_weak();
     tranquilo.window.global::<ThemeCallbacks>()
@@ -275,11 +288,13 @@ fn main() -> Result<()> {
             theme_handle.global::<Theme>().set_nav(theme.nav);
             theme_handle.global::<Theme>().set_text_clr_primary(theme.text_clr_primary);
             theme_handle.global::<Theme>().set_text_clr_secondary(theme.text_clr_secondary);
-        });
-
+    });
 
     let music_player = Arc::clone(&tranquilo.music_player);
+    
     let timer = Arc::new(Timer::default());
+    let cloned_timer = Arc::clone(&timer);
+
     let timer_handle = Arc::new(tranquilo.window.as_weak());
     tranquilo.window.on_action_timer(move |action| {
         let timer_start = timer_handle.clone();
@@ -288,14 +303,13 @@ fn main() -> Result<()> {
 
         match action {
             TimerAction::Start => {
-                
                 timer_handle.set_active(true);
                 timer.start(
                     TimerMode::Repeated,
-                    std::time::Duration::from_millis(50),
+                    std::time::Duration::from_millis(1000),
                     move || {
                         let timer_start = timer_start.upgrade().unwrap();
-                        timer_start.invoke_tick(50);
+                        timer_start.invoke_tick(1000);
                         
                         let remaining_time = timer_start.get_remaining_time() as f32;
                         let target_time = timer_start.get_target_time() as f32;
@@ -330,14 +344,21 @@ fn main() -> Result<()> {
                 timer_handle.invoke_change_timer();
             }
         }
-        });
+    });
 
     let timer_change_handle = tranquilo.window.as_weak();
+    let timer_change_music_handle = Arc::clone(&tranquilo.music_player);
     tranquilo.window.on_change_timer(move || {
         let timer_change_handle = timer_change_handle.upgrade().unwrap();
 
         match timer_change_handle.get_active_timer() {
             TimerType::Focus => {
+                if !timer_change_handle.global::<Settings>().get_auto_start_break_timer() {
+                    timer_change_handle.set_active(false);
+                    cloned_timer.stop();
+                    timer_change_music_handle.lock().unwrap().stop();
+                }
+
                 if timer_change_handle.get_active_round() == timer_change_handle.get_timer_config().rounds {
                     let long_break = timer_change_handle.get_timer_config().long_break;
 
@@ -345,6 +366,7 @@ fn main() -> Result<()> {
                     timer_change_handle.set_active_timer(TimerType::LongBreak);
                     timer_change_handle.set_target_time(long_break);
                     timer_change_handle.set_remaining_time(long_break);
+
                 } else {
                     let short_break = timer_change_handle.get_timer_config().short_break;
 
@@ -354,6 +376,12 @@ fn main() -> Result<()> {
                 }
             }
             TimerType::ShortBreak => {
+                if !timer_change_handle.global::<Settings>().get_auto_start_focus_timer() {
+                    timer_change_handle.set_active(false);
+                    cloned_timer.stop();
+                    timer_change_music_handle.lock().unwrap().stop();
+                }
+
                 let focus_time = timer_change_handle.get_timer_config().focus;
 
                 timer_change_handle.set_active_round(timer_change_handle.get_active_round() + 1);
@@ -368,9 +396,14 @@ fn main() -> Result<()> {
                 timer_change_handle.set_active_timer(TimerType::Focus);
                 timer_change_handle.set_target_time(focus_time);
                 timer_change_handle.set_remaining_time(focus_time);
+
+                timer_change_handle.set_active(false);
+                cloned_timer.stop();
+                timer_change_music_handle.lock().unwrap().stop();
             }
         }
-        });
+    });
+
     
     let music_change_handle = Arc::clone(&tranquilo.music_player);
     let song_change_handle = tranquilo.window.as_weak();
@@ -409,7 +442,10 @@ fn main() -> Result<()> {
     tranquilo.window.global::<Tasks>()
         .on_add_task(move |text| {
 
-            if text.to_string() == "" {
+            println!("{}", text);
+            println!("{}", text.is_empty());
+
+            if text.is_empty() {
                 return;
             }
 

@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 use slint::SharedString;
 use sqlite::Connection;
 use chrono::Utc;
@@ -39,7 +39,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub fn new(path: &str) -> Self {
+    pub fn new(path: PathBuf) -> Self {
         let connection = Connection::open(path).unwrap();
         Database { connection }
     }
@@ -56,7 +56,8 @@ impl Database {
     }
 
     pub fn insert_task(&self, task: &Task) -> Result<(), sqlite::Error> {
-        let query = format!("INSERT INTO tasks (id, text, status, timestamp) VALUES ('{}', '{}', '{}', '{}')",
+
+        let query = format!("INSERT INTO tasks (id, text, status, timestamp) VALUES ('{}', \"{}\", '{}', '{}')",
             task.id,
             task.text,
             task.status.to_string(),
