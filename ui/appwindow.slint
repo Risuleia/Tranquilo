@@ -25,6 +25,7 @@ export component AppWindow inherits BorderlessWindow {
     width: 360px;
     height: 550px;
     background: Theme.background;
+    always-on-top: window_on_top();
 
     callback close-window();
     callback minimize-window();
@@ -38,6 +39,10 @@ export component AppWindow inherits BorderlessWindow {
     }
     move() => {
         root.move-window()
+    }
+
+    function window_on_top() -> bool {
+        Settings.always-on-top && (active-timer == TimerType.focus || !Settings.always-on-top-during-breaks)
     }
 
     in-out property <bool> active: false;

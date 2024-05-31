@@ -1,5 +1,6 @@
 {
-    "alwaysOnTop": true,
+    "alwaysOnTop": false,
+    "alwaysOnTopDuringBreaks": false,
     "autoStartFocusTimer": true,
     "autoStartBreakTimer": true,
     "minimizeToTray": false,

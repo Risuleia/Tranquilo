@@ -137,6 +137,7 @@ impl Into<JsonTheme> for JsonThemeTemplate {
 #[serde(rename_all = "camelCase")]
 pub struct JsonSettings {
     pub always_on_top: bool,
+    pub always_on_top_during_breaks: bool,
     pub auto_start_focus_timer: bool,
     pub auto_start_break_timer: bool,
     pub minimize_to_tray: bool,

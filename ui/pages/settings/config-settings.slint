@@ -59,6 +59,7 @@ export component ConfigSettings inherits VerticalLayout {
 
         for setting[index] in [
             { name: "Always On Top", state: Settings.always-on-top, setting-param: BoolSettingTypes.AlwaysOnTop },
+            { name: "Always On Top during Breaks", state: Settings.always-on-top-during-breaks, setting-param: BoolSettingTypes.AlwaysOnTopDuringBreaks },
             { name: "Auto-start Focus Timer", state: Settings.auto-start-focus-timer, setting-param: BoolSettingTypes.AutoStartFocusTimer },
             { name: "Auto-start Break Timer", state: Settings.auto-start-break-timer, setting-param: BoolSettingTypes.AutoStartBreakTimer },
             { name: "Minimize to Tray", state: Settings.minimize-to-tray, setting-param: BoolSettingTypes.MinimizeToTray },

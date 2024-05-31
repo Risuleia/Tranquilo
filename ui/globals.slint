@@ -45,6 +45,7 @@ export struct TimerConfig {
 
 export enum BoolSettingTypes {
     AlwaysOnTop,
+    AlwaysOnTopDuringBreaks,
     AutoStartBreakTimer,
     AutoStartFocusTimer,
     Notifications,
@@ -63,6 +64,7 @@ export enum IntSettingTypes {
 
 export global Settings {
     in-out property <bool> always-on-top;
+    in-out property <bool> always-on-top-during-breaks;
     in-out property <bool> auto-start-break-timer;
     in-out property <bool> auto-start-focus-timer;
     in-out property <bool> minimize-to-tray;

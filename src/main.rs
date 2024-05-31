@@ -25,6 +25,9 @@ impl AppWindow {
             .set_always_on_top(settings.always_on_top);
 
         self.global::<Settings>()
+            .set_always_on_top_during_breaks(settings.always_on_top_during_breaks);
+
+        self.global::<Settings>()
             .set_auto_start_focus_timer(settings.auto_start_focus_timer);
 
         self.global::<Settings>()
@@ -69,6 +72,7 @@ impl AppWindow {
         settings::save_settings(
             JsonSettings {
                 always_on_top: self.global::<Settings>().get_always_on_top(),
+                always_on_top_during_breaks: self.global::<Settings>().get_always_on_top_during_breaks(),
                 auto_start_focus_timer: self.global::<Settings>().get_auto_start_focus_timer(),
                 auto_start_break_timer: self.global::<Settings>().get_auto_start_break_timer(),
                 minimize_to_tray: self.global::<Settings>().get_minimize_to_tray(),
@@ -185,6 +189,9 @@ fn main() -> Result<()> {
             match setting_type {
                 BoolSettingTypes::AlwaysOnTop => {
                     setting_handle.global::<Settings>().set_always_on_top(!value)
+                }
+                BoolSettingTypes::AlwaysOnTopDuringBreaks => {
+                    setting_handle.global::<Settings>().set_always_on_top_during_breaks(!value)
                 }
                 BoolSettingTypes::AutoStartFocusTimer => {
                     setting_handle.global::<Settings>().set_auto_start_focus_timer(!value)
