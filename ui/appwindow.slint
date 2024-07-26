@@ -26,6 +26,7 @@ export component AppWindow inherits BorderlessWindow {
     height: 550px;
     background: Theme.background;
     always-on-top: window_on_top();
+    icon: @image-url("../Logo.png");
 
     callback close-window();
     callback minimize-window();
@@ -59,6 +60,8 @@ export component AppWindow inherits BorderlessWindow {
 
     in-out property <int> ambient-volume: Settings.ambient-volume;
     in-out property <int> alerts-volume: Settings.alerts-volume;
+
+    in-out property <bool> minimized: false;
     
     callback action-timer(TimerAction);
 

@@ -213,7 +213,7 @@ pub fn load_settings() -> JsonSettings {
 }
 
 pub fn load_themes() -> Vec<JsonTheme> {
-    let theme_dir = Path::new("../assets/themes");
+    let theme_dir = Path::new("assets/themes");
 
     let mut themes: Vec<JsonTheme> = WalkDir::new(theme_dir)
         .into_iter()
@@ -246,7 +246,7 @@ pub fn load_themes() -> Vec<JsonTheme> {
 }
 
 pub fn load_songs() -> Vec<String> {
-    let music_dir = Path::new("../assets/music");
+    let music_dir = Path::new("assets/music");
 
     let mut songs: Vec<String> = WalkDir::new(music_dir)
         .into_iter()

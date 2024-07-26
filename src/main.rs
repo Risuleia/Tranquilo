@@ -6,11 +6,13 @@ mod db;
 
 slint::include_modules!();
 
-use std::{rc::Rc, sync::{Arc, Mutex}, time::SystemTime};
+use std::{env, rc::Rc, sync::{mpsc, Arc, Mutex}, thread, time::{Duration, SystemTime}};
 use anyhow::Result;
 use chrono::Utc;
+use notify_rust::Notification;
 use single_instance::SingleInstance;
 use slint::{ComponentHandle, Model, ModelRc, PlatformError, Timer, TimerMode, VecModel};
+use tray_item::{TrayItem, IconSource};
 
 use settings::{get_dir, create_db, JsonSettings};
 use music_player::MusicPlayer;
@@ -18,6 +20,10 @@ use db::{Database, Task as TaskStruct};
 
 pub const PROGRESS_BYTES: &str = include_str!("../assets/Circle.svg");
 
+enum TrayMessage {
+    MinimizeRestore,
+    Quit
+}
 
 impl AppWindow {
     fn set_settings(&self, settings: &JsonSettings) {
@@ -176,6 +182,26 @@ fn main() -> Result<()> {
         return Err(anyhow::anyhow!("One instance of Tranquilo is already running."));
     }
 
+    let mut tray = TrayItem::new(
+        "Tranquilo\nClick for more options", 
+        IconSource::Resource("logo-icon")
+    )
+    .unwrap();
+
+    let (tray_tx, tray_rx) = mpsc::sync_channel(1);
+
+    let minimize_tx = tray_tx.clone();
+    tray.add_menu_item("Minimize / Restore", move || {
+        minimize_tx.send(TrayMessage::MinimizeRestore).unwrap()
+    })
+    .unwrap();
+
+    let quit_tx = tray_tx;
+    tray.add_menu_item("Quit", move || {
+        quit_tx.send(TrayMessage::Quit).unwrap()
+    })
+    .unwrap();
+
     slint::platform::set_platform(Box::new(i_slint_backend_winit::Backend::new().unwrap())).unwrap();
 
     let tranquilo = Tranquilo::new();
@@ -241,7 +267,6 @@ fn main() -> Result<()> {
             }
             setting_handle.save_settings();
     });
-
     let close_handle = tranquilo.window.as_weak();
     tranquilo.window.on_close_window(move || {
         let close_handle = close_handle.upgrade().unwrap();
@@ -272,6 +297,38 @@ fn main() -> Result<()> {
             move_handle.window(),
             |window| window.drag_window()
         );
+    });
+
+    let tray_handle = tranquilo.window.as_weak();
+    let _tray_receiver_thread = thread::spawn(move || loop {
+        match tray_rx.recv() {
+            Ok(TrayMessage::MinimizeRestore) => {
+                let tray_handle_clone = tray_handle.clone();
+                slint::invoke_from_event_loop(move || {
+                    let main = tray_handle_clone.upgrade().unwrap();
+                    i_slint_backend_winit::WinitWindowAccessor::with_winit_window(
+                        main.window(), 
+                        |window| {
+                            if window.is_minimized().unwrap() {
+                                window.set_minimized(false);
+                                window.focus_window()
+                            } else {
+                                window.set_minimized(true)
+                            }
+                        }
+                    );
+                })
+                .unwrap();
+            },
+            Ok(TrayMessage::Quit) => {
+                let tray_handle_clone = tray_handle.clone();
+                slint::invoke_from_event_loop(move || {
+                    tray_handle_clone.upgrade().unwrap().hide().unwrap();
+                })
+                .unwrap()
+            },
+            _ => {}
+        }
     });
     
     let theme_handle = tranquilo.window.as_weak();
@@ -354,9 +411,11 @@ fn main() -> Result<()> {
     });
 
     let timer_change_handle = tranquilo.window.as_weak();
+    let notif_handle = tranquilo.window.as_weak();
     let timer_change_music_handle = Arc::clone(&tranquilo.music_player);
     tranquilo.window.on_change_timer(move || {
         let timer_change_handle = timer_change_handle.upgrade().unwrap();
+        let notif_handle = notif_handle.upgrade().unwrap();
 
         match timer_change_handle.get_active_timer() {
             TimerType::Focus => {
@@ -374,12 +433,31 @@ fn main() -> Result<()> {
                     timer_change_handle.set_target_time(long_break);
                     timer_change_handle.set_remaining_time(long_break);
 
+                    if notif_handle.global::<Settings>().get_notifications() {
+                        Notification::new()
+                            .summary("Great work!")
+                            .body(&format!("Starting a {} minute long break round", long_break / 60000))
+                            .timeout(Duration::from_secs(3))
+                            .auto_icon()
+                            .show()
+                            .unwrap();
+                    }
                 } else {
                     let short_break = timer_change_handle.get_timer_config().short_break;
 
                     timer_change_handle.set_active_timer(TimerType::ShortBreak);
                     timer_change_handle.set_target_time(short_break);
                     timer_change_handle.set_remaining_time(short_break);
+
+                    if notif_handle.global::<Settings>().get_notifications() {
+                        Notification::new()
+                            .summary("Great work!")
+                            .body(&format!("Starting a {} minute long break round", short_break / 60000))
+                            .timeout(Duration::from_secs(3))
+                            .auto_icon()
+                            .show()
+                            .unwrap();
+                    }
                 }
             }
             TimerType::ShortBreak => {
@@ -395,6 +473,16 @@ fn main() -> Result<()> {
                 timer_change_handle.set_active_timer(TimerType::Focus);
                 timer_change_handle.set_target_time(focus_time);
                 timer_change_handle.set_remaining_time(focus_time);
+
+                if notif_handle.global::<Settings>().get_notifications() {
+                    Notification::new()
+                        .summary("Break over")
+                        .body(&format!("Delve into a {} minute long focus session", focus_time / 60000))
+                        .timeout(Duration::from_secs(3))
+                        .auto_icon()
+                        .show()
+                        .unwrap();
+                }
             }
             TimerType::LongBreak => {
                 let focus_time = timer_change_handle.get_timer_config().focus;
@@ -407,6 +495,16 @@ fn main() -> Result<()> {
                 timer_change_handle.set_active(false);
                 cloned_timer.stop();
                 timer_change_music_handle.lock().unwrap().stop();
+
+                if notif_handle.global::<Settings>().get_notifications() {
+                    Notification::new()
+                        .summary("Break over")
+                        .body(&format!("Delve into a {} minute long break round", focus_time / 60000))
+                        .timeout(Duration::from_secs(3))
+                        .auto_icon()
+                        .show()
+                        .unwrap();
+                }
             }
         }
     });

@@ -33,7 +33,7 @@ impl MusicPlayer {
     }
 
     pub fn play(&mut self, file_name: String) {
-        let path_str = format!("../assets/music/{}.mp3", file_name);
+        let path_str = format!("assets/music/{}.mp3", file_name);
         
         let cloned_sink = Arc::clone(&self.sink);
 
